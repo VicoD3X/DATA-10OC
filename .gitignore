@@ -80,3 +80,9 @@ __azurite_db*__.json
 # *.joblib
 # *.pkl
 # *.pickle
+
+
+# Fichiers de modèles / embeddings volumineux
+*.pickle
+*.pkl
+*.joblib
