@@ -4,9 +4,9 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import List
 
-import joblib
-import numpy as np
-import pandas as pd
+import joblib          # Type: ignore
+import numpy as np     # Type: ignore
+import pandas as pd    # Type: ignore
 
 
 @dataclass

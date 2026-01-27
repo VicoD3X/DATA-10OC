@@ -1,21 +1,5 @@
-# --- Data / Reco ---
-numpy>=1.24
-pandas>=2.0
-scipy>=1.10
-scikit-learn>=1.3
-joblib>=1.3
-tqdm>=4.66
+# Uncomment to enable Azure Monitor OpenTelemetry
+# Ref: aka.ms/functions-azure-monitor-python
+# azure-monitor-opentelemetry
 
-# --- App demo ---
-streamlit>=1.30
-requests>=2.31
-
-# --- Azure Functions / Cloud ---
-azure-functions>=1.21.0
-azure-storage-blob>=12.20.0
-azure-identity>=1.15.0
-python-dotenv>=1.0.0
-
-# --- Optional (if you also want a Flask demo) ---
-flask>=3.0
-waitress>=2.1
+azure-functions

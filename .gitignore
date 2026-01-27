@@ -1,63 +1,82 @@
-# =========================
-# Python / venv
-# =========================
+# =====================================================
+# Python
+# =====================================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# =====================================================
+# Environnements virtuels
+# =====================================================
 .venv/
 venv/
 ENV/
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-*.so
-*.egg-info/
-dist/
+env/
+env.bak/
+venv.bak/
+.python-version
+
+# =====================================================
+# Packaging / build
+# =====================================================
 build/
+dist/
+*.egg-info/
+.eggs/
+wheels/
 
-# =========================
-# Jupyter (on garde les .ipynb !)
-# =========================
+# =====================================================
+# Logs / caches / tests
+# =====================================================
+*.log
+.cache/
+.pytest_cache/
+.coverage*
+htmlcov/
+.mypy_cache/
+
+# =====================================================
+# Jupyter
+# =====================================================
 .ipynb_checkpoints/
+# IMPORTANT : on versionne les notebooks .ipynb
 
-# =========================
-# OS / Editor
-# =========================
+# =====================================================
+# OS / IDE
+# =====================================================
 .DS_Store
 Thumbs.db
-Desktop.ini
-
-# VS Code local settings (optionnel)
 .vscode/
 
-# =========================
-# Secrets / env
-# =========================
+# =====================================================
+# Secrets / configuration locale
+# =====================================================
 .env
 .env.*
-*.pem
 *.key
+*.pem
 
-# =========================
-# Data / artifacts (à adapter)
-# =========================
-*.pkl
-*.pickle
-*.joblib
+# =====================================================
+# Azure Functions (local uniquement)
+# =====================================================
+azure_function/local.settings.json
+azure_function/bin/
+azure_function/obj/
+appsettings.json
 
-# Caches / logs
-*.log
+# =====================================================
+# Azurite (émulateur Azure local)
+# =====================================================
+__blobstorage__/
+__queuestorage__/
+__azurite_db*__.json
+.python_packages/
 
-# =========================
-# Azure Functions local
-# =========================
-# Local settings (contient des secrets)
-local.settings.json
-
-# Azure Functions build outputs
-bin/
-obj/
-
-# =========================
-# Streamlit cache
-# =========================
-.streamlit/secrets.toml
-.streamlit/.cache/
+# =====================================================
+# Fichiers lourds générés (optionnel)
+# =====================================================
+# Si besoin, commenter ces lignes pour versionner
+# *.joblib
+# *.pkl
+# *.pickle
