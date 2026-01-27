@@ -1,0 +1,31 @@
+Test local du moteur de recommandation — lecture des résultats
+
+0 -> [157519, 157944, 159495, 156690, 162857]
+1 -> [95797, 90583, 236005, 231234, 37095]
+2 -> [25856, 30693, 32503, 31139, 31325]
+999999 -> [119592, 96663, 108854, 284847, 235840]
+
+Format de sortie
+- Chaque ligne est de la forme : <user_id> -> [a1, a2, a3, a4, a5]
+- <user_id> : identifiant utilisateur demandé
+- [a1..a5] : liste des 5 identifiants d’articles recommandés (ordre = du plus recommandé au moins recommandé)
+
+Résultats obtenus
+0 -> [157519, 157944, 159495, 156690, 162857]
+1 -> [95797, 90583, 236005, 231234, 37095]
+2 -> [25856, 30693, 32503, 31139, 31325]
+999999 -> [119592, 96663, 108854, 284847, 235840]
+
+Interprétation (cas par cas)
+- user_id = 0, 1, 2 :
+  Ces utilisateurs existent dans l’historique de clics. Le système génère donc une recommandation personnalisée :
+  les articles proposés sont calculés à partir des embeddings des articles déjà consultés par l’utilisateur (approche basée sur le contenu).
+
+- user_id = 999999 :
+  Cet utilisateur n’a aucun historique dans les données (cas "cold start"). Le système bascule automatiquement sur le fallback :
+  il renvoie les articles les plus populaires globalement (baseline popularité).
+
+Ce que ces résultats valident
+- Le moteur retourne systématiquement 5 recommandations.
+- La personnalisation fonctionne lorsque l’historique est disponible (users 0, 1, 2).
+- Le système reste robuste en l’absence d’historique grâce au fallback popularité (user 999999).
