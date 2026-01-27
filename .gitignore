@@ -1,0 +1,63 @@
+# =========================
+# Python / venv
+# =========================
+.venv/
+venv/
+ENV/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+dist/
+build/
+
+# =========================
+# Jupyter (on garde les .ipynb !)
+# =========================
+.ipynb_checkpoints/
+
+# =========================
+# OS / Editor
+# =========================
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# VS Code local settings (optionnel)
+.vscode/
+
+# =========================
+# Secrets / env
+# =========================
+.env
+.env.*
+*.pem
+*.key
+
+# =========================
+# Data / artifacts (à adapter)
+# =========================
+*.pkl
+*.pickle
+*.joblib
+
+# Caches / logs
+*.log
+
+# =========================
+# Azure Functions local
+# =========================
+# Local settings (contient des secrets)
+local.settings.json
+
+# Azure Functions build outputs
+bin/
+obj/
+
+# =========================
+# Streamlit cache
+# =========================
+.streamlit/secrets.toml
+.streamlit/.cache/
