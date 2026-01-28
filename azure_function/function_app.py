@@ -112,28 +112,26 @@ def _recommend(
 @app.blob_input(
     arg_name="emb_blob",
     path="mycontent-assets/articles_embeddings_pca50.joblib",
-    connection="AzureWebJobsStorage",
+    connection="RECO_STORAGE",
     data_type=func.DataType.STREAM,
 )
 @app.blob_input(
     arg_name="clicks_blob",
     path="mycontent-assets/clicks_sample.csv",
-    connection="AzureWebJobsStorage",
+    connection="RECO_STORAGE",
     data_type=func.DataType.STREAM,
 )
 def recommend(req: func.HttpRequest, emb_blob, clicks_blob) -> func.HttpResponse:
     try:
-        # 🔍 DIAGNOSTIC BLOB BINDING
+        # 🔍 DIAGNOSTIC BLOB BINDING (aligné sur RECO_STORAGE)
         if emb_blob is None or clicks_blob is None:
             return func.HttpResponse(
                 json.dumps({
                     "error": "Blob input binding returned None",
                     "emb_blob_is_none": emb_blob is None,
                     "clicks_blob_is_none": clicks_blob is None,
-                    "AzureWebJobsStorage_present": "AzureWebJobsStorage" in os.environ,
-                    "AzureWebJobsStorage_account": _acc_name_from_conn(
-                        os.environ.get("AzureWebJobsStorage")
-                    ),
+                    "RECO_STORAGE_present": "RECO_STORAGE" in os.environ,
+                    "RECO_STORAGE_account": _acc_name_from_conn(os.environ.get("RECO_STORAGE")),
                     "expected_paths": {
                         "emb": "mycontent-assets/articles_embeddings_pca50.joblib",
                         "clicks": "mycontent-assets/clicks_sample.csv"
