@@ -1,5 +1,7 @@
 import json
 import logging
+import os
+import re
 from io import BytesIO
 from typing import List, Tuple, Optional
 
@@ -16,6 +18,13 @@ _CLICKS: Optional[pd.DataFrame] = None
 _TOP_POPULAR: Optional[List[int]] = None
 
 _EPS = 1e-12
+
+
+def _acc_name_from_conn(v: Optional[str]) -> Optional[str]:
+    if not v:
+        return None
+    m = re.search(r"AccountName=([^;]+)", v)
+    return m.group(1) if m else None
 
 
 def _l2_normalize(X: np.ndarray, eps: float = 1e-12) -> np.ndarray:
@@ -54,8 +63,14 @@ def _ensure_assets_loaded(emb_stream, clicks_stream):
     return _X, _CLICKS, _TOP_POPULAR
 
 
-def _recommend(user_id: int, X: np.ndarray, clicks: pd.DataFrame,
-               top_popular: List[int], k: int = 5, pool: int = 300) -> Tuple[List[int], str]:
+def _recommend(
+    user_id: int,
+    X: np.ndarray,
+    clicks: pd.DataFrame,
+    top_popular: List[int],
+    k: int = 5,
+    pool: int = 300,
+) -> Tuple[List[int], str]:
 
     hist = clicks.loc[clicks["user_id"] == user_id, "click_article_id"].astype(int).tolist()
     hist = [a for a in hist if 0 <= a < X.shape[0]]
@@ -108,6 +123,26 @@ def _recommend(user_id: int, X: np.ndarray, clicks: pd.DataFrame,
 )
 def recommend(req: func.HttpRequest, emb_blob, clicks_blob) -> func.HttpResponse:
     try:
+        # 🔍 DIAGNOSTIC BLOB BINDING
+        if emb_blob is None or clicks_blob is None:
+            return func.HttpResponse(
+                json.dumps({
+                    "error": "Blob input binding returned None",
+                    "emb_blob_is_none": emb_blob is None,
+                    "clicks_blob_is_none": clicks_blob is None,
+                    "AzureWebJobsStorage_present": "AzureWebJobsStorage" in os.environ,
+                    "AzureWebJobsStorage_account": _acc_name_from_conn(
+                        os.environ.get("AzureWebJobsStorage")
+                    ),
+                    "expected_paths": {
+                        "emb": "mycontent-assets/articles_embeddings_pca50.joblib",
+                        "clicks": "mycontent-assets/clicks_sample.csv"
+                    }
+                }),
+                status_code=500,
+                mimetype="application/json"
+            )
+
         user_id_raw = req.params.get("user_id")
         k_raw = req.params.get("k", "5")
 
