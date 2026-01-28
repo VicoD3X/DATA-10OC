@@ -1,11 +1,11 @@
 import json
 import logging
 import os
-import re
 from io import BytesIO
 from typing import List, Tuple, Optional
 
 import azure.functions as func
+from azure.storage.blob import BlobServiceClient
 import joblib
 import numpy as np
 import pandas as pd
@@ -19,12 +19,32 @@ _TOP_POPULAR: Optional[List[int]] = None
 
 _EPS = 1e-12
 
+# Blob config
+_CONTAINER = "mycontent-assets"
+_EMB_BLOB = "articles_embeddings_pca50.joblib"
+_CLICKS_BLOB = "clicks_sample.csv"
 
-def _acc_name_from_conn(v: Optional[str]) -> Optional[str]:
-    if not v:
-        return None
-    m = re.search(r"AccountName=([^;]+)", v)
-    return m.group(1) if m else None
+# Cache du client blob
+_BSC: Optional[BlobServiceClient] = None
+
+
+def _get_blob_service() -> BlobServiceClient:
+    global _BSC
+    if _BSC is not None:
+        return _BSC
+
+    conn = os.environ.get("RECO_STORAGE")
+    if not conn:
+        raise RuntimeError("Missing RECO_STORAGE environment variable")
+
+    _BSC = BlobServiceClient.from_connection_string(conn)
+    return _BSC
+
+
+def _load_blob_bytes(container: str, blob_name: str) -> bytes:
+    bsc = _get_blob_service()
+    bc = bsc.get_container_client(container)
+    return bc.download_blob(blob_name).readall()
 
 
 def _l2_normalize(X: np.ndarray, eps: float = 1e-12) -> np.ndarray:
@@ -43,19 +63,21 @@ def _build_top_popular(clicks: pd.DataFrame, n: int = 200) -> List[int]:
     )
 
 
-def _ensure_assets_loaded(emb_stream, clicks_stream):
+def _ensure_assets_loaded():
     global _X, _CLICKS, _TOP_POPULAR
 
     if _X is None:
-        logging.info("Loading embeddings from Blob Storage")
-        X = joblib.load(BytesIO(emb_stream.read()))
+        logging.info("Loading embeddings from Blob Storage (SDK)")
+        emb_bytes = _load_blob_bytes(_CONTAINER, _EMB_BLOB)
+        X = joblib.load(BytesIO(emb_bytes))
         X = np.asarray(X, dtype=np.float32)
         X = _l2_normalize(X, eps=_EPS)
         _X = X
 
     if _CLICKS is None:
-        logging.info("Loading clicks from Blob Storage")
-        _CLICKS = pd.read_csv(BytesIO(clicks_stream.read()))
+        logging.info("Loading clicks from Blob Storage (SDK)")
+        clicks_bytes = _load_blob_bytes(_CONTAINER, _CLICKS_BLOB)
+        _CLICKS = pd.read_csv(BytesIO(clicks_bytes))
 
     if _TOP_POPULAR is None:
         _TOP_POPULAR = _build_top_popular(_CLICKS, n=200)
@@ -109,38 +131,8 @@ def _recommend(
 
 @app.function_name(name="recommend")
 @app.route(route="recommend", methods=["GET", "POST"])
-@app.blob_input(
-    arg_name="emb_blob",
-    path="mycontent-assets/articles_embeddings_pca50.joblib",
-    connection="RECO_STORAGE",
-    data_type=func.DataType.STREAM,
-)
-@app.blob_input(
-    arg_name="clicks_blob",
-    path="mycontent-assets/clicks_sample.csv",
-    connection="RECO_STORAGE",
-    data_type=func.DataType.STREAM,
-)
-def recommend(req: func.HttpRequest, emb_blob, clicks_blob) -> func.HttpResponse:
+def recommend(req: func.HttpRequest) -> func.HttpResponse:
     try:
-        # 🔍 DIAGNOSTIC BLOB BINDING (aligné sur RECO_STORAGE)
-        if emb_blob is None or clicks_blob is None:
-            return func.HttpResponse(
-                json.dumps({
-                    "error": "Blob input binding returned None",
-                    "emb_blob_is_none": emb_blob is None,
-                    "clicks_blob_is_none": clicks_blob is None,
-                    "RECO_STORAGE_present": "RECO_STORAGE" in os.environ,
-                    "RECO_STORAGE_account": _acc_name_from_conn(os.environ.get("RECO_STORAGE")),
-                    "expected_paths": {
-                        "emb": "mycontent-assets/articles_embeddings_pca50.joblib",
-                        "clicks": "mycontent-assets/clicks_sample.csv"
-                    }
-                }),
-                status_code=500,
-                mimetype="application/json"
-            )
-
         user_id_raw = req.params.get("user_id")
         k_raw = req.params.get("k", "5")
 
@@ -153,13 +145,13 @@ def recommend(req: func.HttpRequest, emb_blob, clicks_blob) -> func.HttpResponse
             return func.HttpResponse(
                 json.dumps({"error": "Missing parameter: user_id"}),
                 status_code=400,
-                mimetype="application/json"
+                mimetype="application/json",
             )
 
         user_id = int(user_id_raw)
         k = max(1, min(int(k_raw), 10))
 
-        X, clicks, top_popular = _ensure_assets_loaded(emb_blob, clicks_blob)
+        X, clicks, top_popular = _ensure_assets_loaded()
         recs, mode = _recommend(user_id, X, clicks, top_popular, k=k)
 
         return func.HttpResponse(
@@ -167,10 +159,10 @@ def recommend(req: func.HttpRequest, emb_blob, clicks_blob) -> func.HttpResponse
                 "user_id": user_id,
                 "k": k,
                 "mode": mode,
-                "recommendations": recs
+                "recommendations": recs,
             }),
             status_code=200,
-            mimetype="application/json"
+            mimetype="application/json",
         )
 
     except Exception as e:
@@ -178,5 +170,5 @@ def recommend(req: func.HttpRequest, emb_blob, clicks_blob) -> func.HttpResponse
         return func.HttpResponse(
             json.dumps({"error": str(e)}),
             status_code=500,
-            mimetype="application/json"
+            mimetype="application/json",
         )
