@@ -6,6 +6,7 @@
 ![Pandas](https://img.shields.io/badge/Pandas-data-150458?style=flat-square&logo=pandas&logoColor=white)
 ![Pytest](https://img.shields.io/badge/tests-pytest-0A9EDC?style=flat-square&logo=pytest&logoColor=white)
 ![Status](https://img.shields.io/badge/status-MVP-2EA44F?style=flat-square)
+[![CI](https://github.com/VicoD3X/reco-engine/actions/workflows/ci.yml/badge.svg)](https://github.com/VicoD3X/reco-engine/actions/workflows/ci.yml)
 
 MVP de recommandation d’articles combinant un moteur content-based, une API Azure Functions et une interface Streamlit de démonstration.
 
@@ -195,9 +196,8 @@ Des tests unitaires simples sont présents dans `tests/test_recommender.py` pour
 - Ajouter une gestion d’erreur plus sobre côté API, avec détails conservés uniquement dans les logs.
 - Comparer l’approche content-based à une approche collaborative ou hybride.
 - Ajouter une évaluation quantitative des recommandations.
-- Mettre en place une CI légère pour lancer les tests automatiquement.
 - Documenter la génération des embeddings PCA depuis les données sources.
 
 ## Contexte du projet
 
-Ce projet a été initialement développé dans le cadre d’un parcours professionnalisant en Data Science. Il a ensuite été nettoyé et restructuré pour servir de projet portfolio, avec une priorité donnée à la clarté, à la lisibilité du dépôt et à la capacité à expliquer les choix techniques.
+Ce projet est conservé comme MVP de recommandation applicatif. Il met l’accent sur la clarté du dépôt, la lisibilité du flux API/interface et la capacité à expliquer les choix techniques sans le présenter comme un système de recommandation industriel.
